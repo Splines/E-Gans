@@ -1,122 +1,167 @@
-Projekt                                                                                                                 PAGE 1
-  0080                   1     Port0 EQU 80h
-  0090                   2     Port1 EQU 90h
-  00A0                   3     Port2 EQU 0A0h
-  0083                   4     MD EQU Port0.3
-  0093                   5     M3 EQU Port1.3
-  0020                   6     MOVE_STATE EQU 20h
-  0000                   7     MOVE_STATE_left EQU MOVE_STATE.0
-  0001                   8     MOVE_STATE_right EQU MOVE_STATE.1
-  0002                   9     MOVE_STATE_up EQU MOVE_STATE.2
-  0003                  10     MOVE_STATE_down EQU MOVE_STATE.3
-                        11
-                        12     ; Light up Matrix D3
-                        13     mov Port0, #00h
-                        14     mov Port1, #00h
-                        15     setb MD
-                        16     setb M3
-                        17
-                        18     ; Jump to main
-                        19     jmp main
-                        20
+main                                                                                                                    PAGE 1
+                         1     CSEG AT 0h
+  0080                   2     Port0 EQU 80h
+  0090                   3     Port1 EQU 90h
+  00A0                   4     Port2 EQU 0A0h
+                         5
+  0021                   6     MCol EQU 21h
+  0022                   7     MRow EQU 22h
+  0020                   8     MOVE_STATE EQU 20h
+  0000                   9     MOVE_STATE_left EQU MOVE_STATE.0
+  0001                  10     MOVE_STATE_right EQU MOVE_STATE.1
+  0002                  11     MOVE_STATE_up EQU MOVE_STATE.2
+  0003                  12     MOVE_STATE_down EQU MOVE_STATE.3
+                        13
+0000 D20B               14     setb MCol.3
+0002 D214               15     setb MRow.4
+                        16
+                        17     ; Init
+0004 12000D             18     lcall setTimer
+0007 120019             19     lcall startTimer
+000A 020056             20     ljmp main
                         21
-                        22     ;;;; Move Lookup table
-                        23     ; Register 20h
-                        24     ; Left  - #00000001b - bit 0
-                        25     ; Right - #00000010b - bit 1
-                        26     ; Up    - #00000100b - bit 2
-                        27     ; Down  - #00001000b - bit 3
-                        28
-                        29     setLeft:
-                        30     mov MOVE_STATE, #00000001b ; MOVE_STATE_LEFT
-                        31     ret
-                        32
-                        33     moveLeft:
-                        34     ret
+                        22     ; Timer
+                        23     setTimer:
+000D 758901             24     mov TMOD, #01h ; Timer0, 16bit
+0010 C28D               25     clr TF0
+0012 758A00             26     mov TL0, #000h; Timer0 init with 0
+0015 758CAF             27     mov TH0, #0AFh;
+                        28     ; setb ET0
+                        29     ; setb EA
+0018 22                 30     ret
+                        31
+                        32     startTimer:
+0019 D28C               33     setb TR0
+001B 22                 34     ret
                         35
-                        36     setRight:
-                        37     mov MOVE_STATE, #00000010b ; MOVE_STATE_RIGHT
-                        38     rett
-****ERROR:Unknownkeyword:`rett'`rett'isneithermacronorinstructionnordirective
-                        39
-                        40     moveRight:
-                        41     ret
-                        42
-                        43     setUp:
-                        44     mov MOVE_STATE, #00000100b ; MOVE_STATE_UP
-                        45     ret
-                        46
-                        47     moveUp:
-                        48     ret
+                        36     ; Light up Matrix
+                        37     updateMatrixLed:
+001C 852280             38     mov Port0, MRow
+001F 852190             39     mov Port1, MCol
+0022 22                 40     ret
+                        41
+                        42     updateSnake:
+0023 308D03             43     jnb TF0, endUpdateSnake
+0026 12000D             44     lcall setTimer
+                        45     ; ...
+                        46     endUpdateSnake:
+0029 22                 47     ret
+                        48
                         49
-                        50     setDown:
-                        51     mov MOVE_STATE, #00001000b ; MOVE_STATE_DOWN
-                        52     ret
-                        53
-                        54     moveDown:
-                        55     ret
-                        56
-                        57     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        58     main:
-                        59     matrixCheckRight:
-                        60     mov P2, #00001111b
-                        61     jb Port2.1, matrixCheckUp ; Port2.1 is 0 if button "4" or "6" is pressed
-                        62     mov P2, #11110000b
-                        63     jb Port2.6, matrixCheckLeft ; Port2.6 is 0 if button "6" is pressed
-                        64     call setRight
-                        65     ljmp move
-                        66
-                        67     matrixCheckLeft:
-                        68     jb Port2.4, matrixCheckDown ; Port2.4 is 0 if button "4" is pressed
-                        69     call setLeft
-                        70     ljmp move
-                        71
-                        72     matrixCheckUp:
-                        73     mov P2, #11110000b
-                        74     jb Port2.5, move ; Port2.5 is 0 if button "2" or "8" is pressed
-                        75     mov P2, #00001111b
-                        76     jb Port2.0, matrixCheckDown ; Port2.0 is 0 if button "2" is pressed
-                        77     call setUp
-                        78     ljmp move
+                        50
+                        51     ;;;; Move Lookup table
+                        52     ; Register 20h
+                        53     ; Left  - #00000001b - bit 0
+                        54     ; Right - #00000010b - bit 1
+                        55     ; Up    - #00000100b - bit 2
+                        56     ; Down  - #00001000b - bit 3
+                        57
+                        58     setLeft:
+002A 752001             59     mov MOVE_STATE, #00000001b ; MOVE_STATE_LEFT
+002D 22                 60     ret
+                        61
+                        62     moveLeft:
+002E C3                 63     clr C
+002F E521               64     mov A, MCol
+0031 03                 65     RR A
+0032 F521               66     mov MCol, A
+0034 22                 67     ret
+                        68
+                        69     setRight:
+0035 752002             70     mov MOVE_STATE, #00000010b ; MOVE_STATE_RIGHT
+0038 22                 71     ret
+                        72
+                        73     moveRight:
+0039 C3                 74     clr C
+003A E521               75     mov A, MCol
+003C 23                 76     RL A
+003D F521               77     mov MCol, A
+003F 22                 78     ret
                         79
-                        80     matrixCheckDown:
-                        81     jb Port2.2, move ; Port2.2 is 0 if button "8" is pressed
-                        82     call setDown
+                        80     setUp:
+0040 752004             81     mov MOVE_STATE, #00000100b ; MOVE_STATE_UP
+0043 22                 82     ret
                         83
-                        84     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                        85     move:
-                        86     checkLeft:
-                        87     jnb MOVE_STATE_LEFT, checkRight
-                        88     call moveLeft
-                        89     ljmp todo
+                        84     moveUp:
+0044 C3                 85     clr C
+0045 E522               86     mov A, MRow
+0047 03                 87     RR A
+0048 F522               88     mov MRow, A
+004A 22                 89     ret
                         90
-                        91     checkRight:
-                        92     jnb MOVE_STATE_RIGHT, checkUp
-                        93     call moveRight
-                        94     ljmp todo
-                        95
-                        96     checkUp:
-                        97     jnb MOVE_STATE_UP, checkDown
-                        98     call moveUp
-                        99     ljmp todo
-                       100
-                       101     checkDown:
-                       102     jnb MOVE_STATE_DOWN, todo
-                       103     call moveDown
-                       104
-                       105     todo:
-                       106     nop
-                       107
-                       108
-                       109     ljmp main
-                       110
+                        91     setDown:
+004B 752008             92     mov MOVE_STATE, #00001000b ; MOVE_STATE_DOWN
+004E 22                 93     ret
+                        94
+                        95     moveDown:
+004F C3                 96     clr C
+0050 E522               97     mov A, MRow
+0052 23                 98     RL A
+0053 F522               99     mov MRow, A
+0055 22                100     ret
+                       101
+                       102
+                       103     ; ------------------------- MAIN ---------------------------------
+                       104     main:
+                       105     matrixCheckRight:
+0056 75A00F            106     mov P2, #00001111b
+0059 20A113            107     jb Port2.1, matrixCheckUp ; Port2.1 is 0 if button "4" or "6" is pressed
+005C 75A0F0            108     mov P2, #11110000b
+005F 20A605            109     jb Port2.6, matrixCheckLeft ; Port2.6 is 0 if button "6" is pressed
+0062 1135              110     call setRight
+0064 020085            111     ljmp callMove
+                       112
+                       113     matrixCheckLeft:
+0067 20A416            114     jb Port2.4, matrixCheckDown ; Port2.4 is 0 if button "4" is pressed
+006A 112A              115     call setLeft
+006C 020085            116     ljmp callMove
+                       117
+                       118     matrixCheckUp:
+006F 75A0F0            119     mov P2, #11110000b
+0072 20A510            120     jb Port2.5, callMove ; Port2.5 is 0 if button "2" or "8" is pressed
+0075 75A00F            121     mov P2, #00001111b
+0078 20A005            122     jb Port2.0, matrixCheckDown ; Port2.0 is 0 if button "2" is pressed
+007B 1140              123     call setUp
+007D 020085            124     ljmp callMove
+                       125
+                       126     matrixCheckDown:
+0080 20A202            127     jb Port2.2, callMove ; Port2.2 is 0 if button "8" is pressed
+0083 114B              128     call setDown
+                       129     ; no ljmp callMove needed
+                       130
+                       131
+                       132
+                       133     callMove:
+                       134     checkLeft:
+0085 300005            135     jnb MOVE_STATE_LEFT, checkRight
+0088 112E              136     call moveLeft
+008A 0200A2            137     ljmp todo
+                       138
+                       139     checkRight:
+008D 300105            140     jnb MOVE_STATE_RIGHT, checkUp
+0090 1139              141     call moveRight
+0092 0200A2            142     ljmp todo
+                       143
+                       144     checkUp:
+0095 300205            145     jnb MOVE_STATE_UP, checkDown
+0098 1144              146     call moveUp
+009A 0200A2            147     ljmp todo
+                       148
+                       149     checkDown:
+009D 300302            150     jnb MOVE_STATE_DOWN, todo
+00A0 114F              151     call moveDown
+                       152
+                       153     todo:
+00A2 111C              154     call updateMatrixLed
+00A4 1123              155     call updateSnake
+                       156
+00A6 020056            157     ljmp main
 ****WARNING:Missing`END'directive
-ASSEMBLY COMPLETE, NO ERRORS FOUND, 2 WARNINGS
+ASSEMBLY COMPLETE, NO ERRORS FOUND, 1 WARNING
 
 
 ERROR SUMMARY:
-Line 38, ERROR:Unknownkeyword:`rett'`rett'isneithermacronorinstructionnordirective
-Line 111, WARNING:Missing`END'directive
+Line 157, WARNING:Missing`END'directive
 
 SYMBOL TABLE:
 ??MCU_8051_IDE . . . . . . . . . . .  N  NUMB  8051H  NOT USED
@@ -135,6 +180,7 @@ B. . . . . . . . . . . . . . . . . .  D  ADDR  00F0H  NOT USED
 BDRCON . . . . . . . . . . . . . . .  D  ADDR  009BH  NOT USED
 BDRCON_1 . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
 BRL. . . . . . . . . . . . . . . . .  D  ADDR  009AH  NOT USED
+CALLMOVE . . . . . . . . . . . . . .  C  ADDR  0085H
 CCAP0H . . . . . . . . . . . . . . .  D  ADDR  00FAH  NOT USED
 CCAP0L . . . . . . . . . . . . . . .  D  ADDR  00EAH  NOT USED
 CCAP1H . . . . . . . . . . . . . . .  D  ADDR  00FBH  NOT USED
@@ -161,10 +207,10 @@ CCF4 . . . . . . . . . . . . . . . .  B  ADDR  00DCH  NOT USED
 CCON . . . . . . . . . . . . . . . .  D  ADDR  00D8H  NOT USED
 CFINT. . . . . . . . . . . . . . . .  C  ADDR  0033H  NOT USED
 CH . . . . . . . . . . . . . . . . .  D  ADDR  00F9H  NOT USED
-CHECKDOWN. . . . . . . . . . . . . .  C  ADDR  0067H
-CHECKLEFT. . . . . . . . . . . . . .  C  ADDR  004FH  NOT USED
-CHECKRIGHT . . . . . . . . . . . . .  C  ADDR  0057H
-CHECKUP. . . . . . . . . . . . . . .  C  ADDR  005FH
+CHECKDOWN. . . . . . . . . . . . . .  C  ADDR  009DH
+CHECKLEFT. . . . . . . . . . . . . .  C  ADDR  0085H  NOT USED
+CHECKRIGHT . . . . . . . . . . . . .  C  ADDR  008DH
+CHECKUP. . . . . . . . . . . . . . .  C  ADDR  0095H
 CKCON. . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKCON0 . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKRL . . . . . . . . . . . . . . . .  D  ADDR  0097H  NOT USED
@@ -185,6 +231,7 @@ DPL. . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 EA . . . . . . . . . . . . . . . . .  B  ADDR  00AFH  NOT USED
 EC . . . . . . . . . . . . . . . . .  B  ADDR  00AEH  NOT USED
 EECON. . . . . . . . . . . . . . . .  D  ADDR  0096H  NOT USED
+ENDUPDATESNAKE . . . . . . . . . . .  C  ADDR  0029H
 ES . . . . . . . . . . . . . . . . .  B  ADDR  00ACH  NOT USED
 ET0. . . . . . . . . . . . . . . . .  B  ADDR  00A9H  NOT USED
 ET1. . . . . . . . . . . . . . . . .  B  ADDR  00ABH  NOT USED
@@ -213,23 +260,22 @@ IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
 KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
 KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
 KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
-M3 . . . . . . . . . . . . . . . . .  N  NUMB  0093H
-MAIN . . . . . . . . . . . . . . . .  C  ADDR  0020H
-MATRIXCHECKDOWN. . . . . . . . . . .  C  ADDR  004AH
-MATRIXCHECKLEFT. . . . . . . . . . .  C  ADDR  0031H
-MATRIXCHECKRIGHT . . . . . . . . . .  C  ADDR  0020H  NOT USED
-MATRIXCHECKUP. . . . . . . . . . . .  C  ADDR  0039H
-MD . . . . . . . . . . . . . . . . .  N  NUMB  0083H
-MOVE . . . . . . . . . . . . . . . .  C  ADDR  004FH
-MOVEDOWN . . . . . . . . . . . . . .  C  ADDR  001FH
-MOVELEFT . . . . . . . . . . . . . .  C  ADDR  0011H
-MOVERIGHT. . . . . . . . . . . . . .  C  ADDR  0015H
-MOVEUP . . . . . . . . . . . . . . .  C  ADDR  001AH
+MAIN . . . . . . . . . . . . . . . .  C  ADDR  0056H
+MATRIXCHECKDOWN. . . . . . . . . . .  C  ADDR  0080H
+MATRIXCHECKLEFT. . . . . . . . . . .  C  ADDR  0067H
+MATRIXCHECKRIGHT . . . . . . . . . .  C  ADDR  0056H  NOT USED
+MATRIXCHECKUP. . . . . . . . . . . .  C  ADDR  006FH
+MCOL . . . . . . . . . . . . . . . .  N  NUMB  0021H
+MOVEDOWN . . . . . . . . . . . . . .  C  ADDR  004FH
+MOVELEFT . . . . . . . . . . . . . .  C  ADDR  002EH
+MOVERIGHT. . . . . . . . . . . . . .  C  ADDR  0039H
+MOVEUP . . . . . . . . . . . . . . .  C  ADDR  0044H
 MOVE_STATE . . . . . . . . . . . . .  N  NUMB  0020H
 MOVE_STATE_DOWN. . . . . . . . . . .  N  NUMB  0003H
 MOVE_STATE_LEFT. . . . . . . . . . .  N  NUMB  0000H
 MOVE_STATE_RIGHT . . . . . . . . . .  N  NUMB  0001H
 MOVE_STATE_UP. . . . . . . . . . . .  N  NUMB  0002H
+MROW . . . . . . . . . . . . . . . .  N  NUMB  0022H
 OSCCON . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 OV . . . . . . . . . . . . . . . . .  B  ADDR  00D2H  NOT USED
 P. . . . . . . . . . . . . . . . . .  B  ADDR  00D0H  NOT USED
@@ -283,10 +329,11 @@ SADEN_0. . . . . . . . . . . . . . .  D  ADDR  00B9H  NOT USED
 SADEN_1. . . . . . . . . . . . . . .  D  ADDR  00BAH  NOT USED
 SBUF . . . . . . . . . . . . . . . .  D  ADDR  0099H  NOT USED
 SCON . . . . . . . . . . . . . . . .  D  ADDR  0098H  NOT USED
-SETDOWN. . . . . . . . . . . . . . .  C  ADDR  001BH
-SETLEFT. . . . . . . . . . . . . . .  C  ADDR  000DH
-SETRIGHT . . . . . . . . . . . . . .  C  ADDR  0012H
-SETUP. . . . . . . . . . . . . . . .  C  ADDR  0016H
+SETDOWN. . . . . . . . . . . . . . .  C  ADDR  004BH
+SETLEFT. . . . . . . . . . . . . . .  C  ADDR  002AH
+SETRIGHT . . . . . . . . . . . . . .  C  ADDR  0035H
+SETTIMER . . . . . . . . . . . . . .  C  ADDR  000DH
+SETUP. . . . . . . . . . . . . . . .  C  ADDR  0040H
 SINT . . . . . . . . . . . . . . . .  C  ADDR  0023H  NOT USED
 SM0. . . . . . . . . . . . . . . . .  B  ADDR  009FH  NOT USED
 SM1. . . . . . . . . . . . . . . . .  B  ADDR  009EH  NOT USED
@@ -298,6 +345,7 @@ SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
 SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
 SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
+STARTTIMER . . . . . . . . . . . . .  C  ADDR  0019H
 T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
 T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
 T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
@@ -305,25 +353,27 @@ T2MOD. . . . . . . . . . . . . . . .  D  ADDR  00C9H  NOT USED
 TB8. . . . . . . . . . . . . . . . .  B  ADDR  009BH  NOT USED
 TCLK . . . . . . . . . . . . . . . .  B  ADDR  00CCH  NOT USED
 TCON . . . . . . . . . . . . . . . .  D  ADDR  0088H  NOT USED
-TF0. . . . . . . . . . . . . . . . .  B  ADDR  008DH  NOT USED
+TF0. . . . . . . . . . . . . . . . .  B  ADDR  008DH
 TF1. . . . . . . . . . . . . . . . .  B  ADDR  008FH  NOT USED
 TF2. . . . . . . . . . . . . . . . .  B  ADDR  00CFH  NOT USED
-TH0. . . . . . . . . . . . . . . . .  D  ADDR  008CH  NOT USED
+TH0. . . . . . . . . . . . . . . . .  D  ADDR  008CH
 TH1. . . . . . . . . . . . . . . . .  D  ADDR  008DH  NOT USED
 TH2. . . . . . . . . . . . . . . . .  D  ADDR  00CDH  NOT USED
 TI . . . . . . . . . . . . . . . . .  B  ADDR  0099H  NOT USED
 TIMER0 . . . . . . . . . . . . . . .  C  ADDR  000BH  NOT USED
 TIMER1 . . . . . . . . . . . . . . .  C  ADDR  001BH  NOT USED
 TIMER2 . . . . . . . . . . . . . . .  C  ADDR  002BH  NOT USED
-TL0. . . . . . . . . . . . . . . . .  D  ADDR  008AH  NOT USED
+TL0. . . . . . . . . . . . . . . . .  D  ADDR  008AH
 TL1. . . . . . . . . . . . . . . . .  D  ADDR  008BH  NOT USED
 TL2. . . . . . . . . . . . . . . . .  D  ADDR  00CCH  NOT USED
-TMOD . . . . . . . . . . . . . . . .  D  ADDR  0089H  NOT USED
-TODO . . . . . . . . . . . . . . . .  C  ADDR  006CH
-TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH  NOT USED
+TMOD . . . . . . . . . . . . . . . .  D  ADDR  0089H
+TODO . . . . . . . . . . . . . . . .  C  ADDR  00A2H
+TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH
 TR1. . . . . . . . . . . . . . . . .  B  ADDR  008EH  NOT USED
 TR2. . . . . . . . . . . . . . . . .  B  ADDR  00CAH  NOT USED
 TXD. . . . . . . . . . . . . . . . .  B  ADDR  00B1H  NOT USED
+UPDATEMATRIXLED. . . . . . . . . . .  C  ADDR  001CH
+UPDATESNAKE. . . . . . . . . . . . .  C  ADDR  0023H
 WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED

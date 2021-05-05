@@ -2,4 +2,4 @@
 # Project: TINF19B2
 # Component: LED Matrix
 
-LedMatrix {{C5 1 C6 1 C7 1 R0 0 R1 0 R2 0 R3 0 R4 0 R5 0 R6 0 R7 0 C0 1 C1 1 C2 1 C3 1 C4 1} {C5 2 C6 1 C7 0 R0 7 R1 6 R2 5 R3 4 R4 3 R5 2 R6 1 R7 0 C0 7 C1 6 C2 5 C3 4 C4 3} {} {} red 50 {0 0} 0 1}
+LedMatrix {{C5 1 C6 1 C7 1 R0 0 R1 0 R2 0 R3 0 R4 0 R5 0 R6 0 R7 0 C0 1 C1 1 C2 1 C3 1 C4 1} {C5 2 C6 1 C7 0 R0 7 R1 6 R2 5 R3 4 R4 3 R5 2 R6 1 R7 0 C0 7 C1 6 C2 5 C3 4 C4 3} {} {} red 0 {1 1} 0 1}
