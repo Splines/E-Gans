@@ -271,7 +271,7 @@
 		pwin_orient="horizontal">
 
 		<file name="main.asm" active="yes" o_bookmark="0" p_bookmark="0" file_index="0" read_only="0" highlight="0">
-			<actual_line value="1"/>
+			<actual_line value="8"/>
 			<md5_hash value="F830F21F4242F1D4538BD0BF7F33BF17"/>
 			<path><![CDATA[src/]]></path>
 			<bookmarks>

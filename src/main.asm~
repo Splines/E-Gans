@@ -1,18 +1,37 @@
 CSEG AT 0h
-Port0 EQU 80h
-Port1 EQU 90h
-Port2 EQU 0A0h
 
-MCol EQU 21h
-MRow EQU 22h
-MOVE_STATE EQU 20h
+; Snake Calculation
+Buffer1X EQU 20h; Col
+Buffer1Y EQU 21h; Row
+Buffer2X EQU 22h; Col
+Buffer2Y EQU 23h; Row
+
+; Lenght 3
+mov 2Ah ,#08h
+mov 2Bh, #08h
+mov 2Ch, #10h
+mov 2Dh, #08h
+
+; Starting point
+HeadX EQU 28h; Keep in sync with incrementor initial value (!!!)
+HeadY EQU 29h
+setb HeadX.3
+setb HeadY.4
+mov Buffer1X, HeadX
+mov Buffer1Y, HeadY
+
+; Snake on grid with LEDs
+SnakeLedRepresentationX EQU 24h
+SnakeLedRepresentationY EQU 25h
+
+
+MOVE_STATE EQU 27h
 MOVE_STATE_left EQU MOVE_STATE.0
 MOVE_STATE_right EQU MOVE_STATE.1
 MOVE_STATE_up EQU MOVE_STATE.2
 MOVE_STATE_down EQU MOVE_STATE.3
+setb MOVE_STATE_UP
 
-setb MCol.3
-setb MRow.4
 
 ; Init
 lcall setTimer
@@ -23,8 +42,8 @@ ljmp main
 setTimer:
 mov TMOD, #01h ; Timer0, 16bit
 clr TF0
-mov TL0, #0EBh; Timer0 init with 0
-mov TH0, #0FFh;
+mov TL0, #0EBh; Timer low
+mov TH0, #0FFh; Timer high
 ; setb ET0
 ; setb EA
 ret
@@ -35,15 +54,74 @@ ret
 
 ; Light up Matrix
 updateMatrixLed:
-mov Port0, MRow
-mov Port1, MCol
+mov P0, SnakeLedRepresentationY
+mov P1, SnakeLedRepresentationX
 ret
+
+
 
 updateSnake:
 jnb TF0, endUpdateSnake
 lcall setTimer
-; ...
+; Storage
+; starting from 28h
+
+; Reset LED Representation
+mov SnakeLedRepresentationX, #00h
+mov SnakeLedRepresentationY, #00h
+
+mov R1, #28h
+
+; TODO: WHILE
+SnakeFollowLoop:
+; R1 is our incrementor
+; Given Buffer1 filled
+; Save old Head to Buffer2
+
+mov Buffer2X, @R1
+inc R1
+mov Buffer2Y, @R1
+
+; Move Buffer1 to Head (Update first element with Buffer1)
+mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
+orl SnakeLedRepresentationX, A
+dec R1
+mov @R1, Buffer1X
+
+mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+orl SnakeLedRepresentationY, A
+inc R1
+mov @R1, Buffer1Y
+inc R1
+
+; Check if next element is 0
+mov A, @R1
+jz endUpdateSnake
+
+; Store second element in Buffer1
+mov Buffer1X, @R1
+inc R1
+mov Buffer1Y, @R1
+
+; Move buffer2 to second element
+dec R1
+mov @R1, Buffer2X
+mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
+orl SnakeLedRepresentationX, A 
+inc R1
+mov @R1, Buffer2Y
+inc R1
+mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+orl SnakeLedRepresentationY, A 
+
+; Do a jump
+mov A, @R1
+jnz SnakeFollowLoop
+
 endUpdateSnake:
+; Move HEAD to Buffer1, so that move operations still work
+mov Buffer1X, HeadX
+mov Buffer1Y, HeadY
 ret
 
 
@@ -61,9 +139,9 @@ ret
 
 moveLeft:
 clr C
-mov A, MCol
+mov A, Buffer1X
 RR A
-mov MCol, A
+mov Buffer1X, A
 ret
 
 setRight:
@@ -72,9 +150,9 @@ ret
 
 moveRight:
 clr C
-mov A, MCol
+mov A, Buffer1X
 RL A
-mov MCol, A
+mov Buffer1X, A
 ret
 
 setUp:
@@ -83,9 +161,9 @@ ret
 
 moveUp:
 clr C
-mov A, MRow
+mov A, Buffer1Y
 RR A
-mov MRow, A
+mov Buffer1Y, A
 ret
 
 setDown:
@@ -94,9 +172,9 @@ ret
 
 moveDown:
 clr C
-mov A, MRow
+mov A, Buffer1Y
 RL A
-mov MRow, A
+mov Buffer1Y, A
 ret
 
 
@@ -104,27 +182,27 @@ ret
 main:
 matrixCheckRight:
 mov P2, #00001111b
-jb Port2.1, matrixCheckUp ; Port2.1 is 0 if button "4" or "6" is pressed
+jb P2.1, matrixCheckUp ; P2.1 is 0 if button "4" or "6" is pressed
 mov P2, #11110000b
-jb Port2.6, matrixCheckLeft ; Port2.6 is 0 if button "6" is pressed
+jb P2.6, matrixCheckLeft ; P2.6 is 0 if button "6" is pressed
 call setRight
 ljmp callMove
 
 matrixCheckLeft:
-jb Port2.4, matrixCheckDown ; Port2.4 is 0 if button "4" is pressed
+jb P2.4, matrixCheckDown ; P2.4 is 0 if button "4" is pressed
 call setLeft
 ljmp callMove
 
 matrixCheckUp:
 mov P2, #11110000b
-jb Port2.5, callMove ; Port2.5 is 0 if button "2" or "8" is pressed
+jb P2.5, callMove ; P2.5 is 0 if button "2" or "8" is pressed
 mov P2, #00001111b
-jb Port2.0, matrixCheckDown ; Port2.0 is 0 if button "2" is pressed
+jb P2.0, matrixCheckDown ; P2.0 is 0 if button "2" is pressed
 call setUp
 ljmp callMove
 
 matrixCheckDown:
-jb Port2.2, callMove ; Port2.2 is 0 if button "8" is pressed
+jb P2.2, callMove ; P2.2 is 0 if button "8" is pressed
 call setDown
 ; no ljmp callMove needed
 
@@ -151,7 +229,8 @@ jnb MOVE_STATE_DOWN, todo
 call moveDown
 
 todo:
-call updateMatrixLed
 call updateSnake
+call updateMatrixLed
 
 ljmp main
+
