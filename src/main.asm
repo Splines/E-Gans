@@ -130,12 +130,12 @@ mov Buffer1Y, @R1
 dec R1
 mov @R1, Buffer2X
 ; mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
-; orl SnakeLedRepresentationX, A 
+; orl SnakeLedRepresentationX, A
 inc R1
 mov @R1, Buffer2Y
 inc R1
 ; mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
-; orl SnakeLedRepresentationY, A 
+; orl SnakeLedRepresentationY, A
 
 ; Update snake with pos from buffer 2
 mov P0, Buffer2Y
@@ -267,25 +267,25 @@ callMove:
 checkLeft:
 jnb MOVE_STATE_LEFT, checkRight
 call moveLeft
-ljmp todo
+ljmp updateSnakeCaller
 
 checkRight:
 jnb MOVE_STATE_RIGHT, checkUp
 call moveRight
-ljmp todo
+ljmp updateSnakeCaller
 
 checkUp:
 jnb MOVE_STATE_UP, checkDown
 call moveUp
-ljmp todo
+ljmp updateSnakeCaller
 
 checkDown:
-jnb MOVE_STATE_DOWN, todo
+jnb MOVE_STATE_DOWN, updateSnakeCaller
 call moveDown
 
-todo:
+; Used since there is no ljnb, therefore we have to go in here first
+updateSnakeCaller:
 call updateSnake
-; call updateMatrixLed
 
 ljmp main
 
