@@ -8,18 +8,18 @@ main                                                                            
   0023                   7     Buffer2Y EQU 23h; Row
                          8
                          9     ; Lenght 3
-0000 752A08             10     mov 2Ah ,#08h
-0003 752B08             11     mov 2Bh, #08h
-0006 752C10             12     mov 2Ch, #10h
-0009 752D08             13     mov 2Dh, #08h
+                        10     ;mov 2Ah ,#08h
+                        11     ;mov 2Bh, #08h
+                        12     ;mov 2Ch, #10h
+                        13     ;mov 2Dh, #08h
                         14
                         15     ; Starting point
   0028                  16     HeadX EQU 28h; Keep in sync with incrementor initial value (!!!)
   0029                  17     HeadY EQU 29h
-000C D243               18     setb HeadX.3
-000E D24C               19     setb HeadY.4
-0010 852820             20     mov Buffer1X, HeadX
-0013 852921             21     mov Buffer1Y, HeadY
+0000 D243               18     setb HeadX.3
+0002 D24C               19     setb HeadY.4
+0004 852820             20     mov Buffer1X, HeadX
+0007 852921             21     mov Buffer1Y, HeadY
                         22
                         23     ; Snake on grid with LEDs
   0024                  24     SnakeLedRepresentationX EQU 24h
@@ -31,217 +31,233 @@ main                                                                            
   0039                  30     MOVE_STATE_right EQU MOVE_STATE.1
   003A                  31     MOVE_STATE_up EQU MOVE_STATE.2
   003B                  32     MOVE_STATE_down EQU MOVE_STATE.3
-0016 D23A               33     setb MOVE_STATE_UP
+000A D23A               33     setb MOVE_STATE_UP
                         34
                         35
                         36     ; Init
-0018 120021             37     lcall setTimer
-001B 12002D             38     lcall startTimer
-001E 0200A6             39     ljmp main
+000C 120015             37     lcall setTimer
+000F 120021             38     lcall startTimer
+0012 020091             39     ljmp main
                         40
                         41     ; Timer
                         42     setTimer:
-0021 758901             43     mov TMOD, #01h ; Timer0, 16bit
-0024 C28D               44     clr TF0
-0026 758AEB             45     mov TL0, #0EBh; Timer low
-0029 758CFF             46     mov TH0, #0FFh; Timer high
+0015 758901             43     mov TMOD, #01h ; Timer0, 16bit
+0018 C28D               44     clr TF0
+001A 758AEB             45     mov TL0, #0EBh; Timer low
+001D 758CFF             46     mov TH0, #0FFh; Timer high
                         47     ; setb ET0
                         48     ; setb EA
-002C 22                 49     ret
+0020 22                 49     ret
                         50
                         51     startTimer:
-002D D28C               52     setb TR0
-002F 22                 53     ret
+0021 D28C               52     setb TR0
+0023 22                 53     ret
                         54
                         55     ; Light up Matrix
-                        56     updateMatrixLed:
-0030 852580             57     mov P0, SnakeLedRepresentationY
-0033 852490             58     mov P1, SnakeLedRepresentationX
-0036 22                 59     ret
+                        56     ;updateMatrixLed:
+                        57     ;mov P0, SnakeLedRepresentationY
+                        58     ;mov P1, SnakeLedRepresentationX
+                        59     ;ret
                         60
                         61
                         62
                         63     updateSnake:
-0037 308D39             64     jnb TF0, endUpdateSnake
-003A 120021             65     lcall setTimer
+0024 308D37             64     jnb TF0, endUpdateSnake
+0027 120015             65     lcall setTimer
                         66     ; Storage
                         67     ; starting from 28h
                         68
                         69     ; Reset LED Representation
-003D 752400             70     mov SnakeLedRepresentationX, #00h
-0040 752500             71     mov SnakeLedRepresentationY, #00h
+                        70     ;mov SnakeLedRepresentationX, #00h
+                        71     ;mov SnakeLedRepresentationY, #00h
                         72
-0043 7928               73     mov R1, #28h
+002A 7928               73     mov R1, #28h
                         74
-                        75     ; TODO: WHILE
-                        76     SnakeFollowLoop:
-                        77     ; R1 is our incrementor
-                        78     ; Given Buffer1 filled
-                        79     ; Save old Head to Buffer2
-                        80
-0045 8722               81     mov Buffer2X, @R1
-0047 09                 82     inc R1
-0048 8723               83     mov Buffer2Y, @R1
-                        84
-                        85     ; Move Buffer1 to Head (Update first element with Buffer1)
-004A E520               86     mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
-004C 4224               87     orl SnakeLedRepresentationX, A
-004E 19                 88     dec R1
-004F A720               89     mov @R1, Buffer1X
-                        90
-0051 E521               91     mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
-0053 4225               92     orl SnakeLedRepresentationY, A
-0055 09                 93     inc R1
-0056 A721               94     mov @R1, Buffer1Y
-0058 09                 95     inc R1
-                        96
-                        97     ; Check if next element is 0
-0059 E7                 98     mov A, @R1
-005A 6017               99     jz endUpdateSnake
+                        75
+                        76     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        77     ;;;;;;;;;;;;;;;;;;;;;; Snake Follow Loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        78     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        79     SnakeFollowLoop:
+                        80     ; R1 is our incrementor
+                        81     ; Given Buffer1 filled
+                        82     ; Save old Head to Buffer2
+                        83
+002C 8722               84     mov Buffer2X, @R1
+002E 09                 85     inc R1
+002F 8723               86     mov Buffer2Y, @R1
+                        87
+                        88     ;;;;;;;;;;;;;;;;;;;;; Buffer1 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        89     ; Move Buffer1 to Head (Update first element with Buffer1)
+0031 E520               90     mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
+                        91     ; orl SnakeLedRepresentationX, A
+0033 19                 92     dec R1
+0034 A720               93     mov @R1, Buffer1X
+                        94
+0036 E521               95     mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+                        96     ; orl SnakeLedRepresentationY, A
+0038 09                 97     inc R1
+0039 A721               98     mov @R1, Buffer1Y
+003B 09                 99     inc R1
                        100
-                       101     ; Store second element in Buffer1
-005C 8720              102     mov Buffer1X, @R1
-005E 09                103     inc R1
-005F 8721              104     mov Buffer1Y, @R1
+                       101     ; Update snake with pos from buffer 1
+003C 852180            102     mov P0, Buffer1Y
+003F 852090            103     mov P1, Buffer1X
+                       104
                        105
-                       106     ; Move buffer2 to second element
-0061 19                107     dec R1
-0062 A722              108     mov @R1, Buffer2X
-0064 E522              109     mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
-0066 4224              110     orl SnakeLedRepresentationX, A
-0068 09                111     inc R1
-0069 A723              112     mov @R1, Buffer2Y
-006B 09                113     inc R1
-006C E523              114     mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
-006E 4225              115     orl SnakeLedRepresentationY, A
+                       106     ;;;;;;;;;;;;;;;;;;;;;;;;;; Break? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       107     ; Check if next element is 0
+0042 E7                108     mov A, @R1
+0043 6019              109     jz endUpdateSnake
+                       110
+                       111     ;;;;;;;;;;;;;;;;;;;;; Buffer2 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       112     ; Store second element in Buffer1
+0045 8720              113     mov Buffer1X, @R1
+0047 09                114     inc R1
+0048 8721              115     mov Buffer1Y, @R1
                        116
-                       117     ; Do a jump
-0070 E7                118     mov A, @R1
-0071 70D2              119     jnz SnakeFollowLoop
-                       120
-                       121     endUpdateSnake:
-                       122     ; Move HEAD to Buffer1, so that move operations still work
-0073 852820            123     mov Buffer1X, HeadX
-0076 852921            124     mov Buffer1Y, HeadY
-0079 22                125     ret
-                       126
+                       117     ; Move buffer2 to second element
+004A 19                118     dec R1
+004B A722              119     mov @R1, Buffer2X
+004D E522              120     mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
+                       121     ; orl SnakeLedRepresentationX, A
+004F 09                122     inc R1
+0050 A723              123     mov @R1, Buffer2Y
+0052 09                124     inc R1
+0053 E523              125     mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+                       126     ; orl SnakeLedRepresentationY, A
                        127
-                       128
-                       129     ;;;; Move Lookup table
-                       130     ; Register 20h
-                       131     ; Left  - #00000001b - bit 0
-                       132     ; Right - #00000010b - bit 1
-                       133     ; Up    - #00000100b - bit 2
-                       134     ; Down  - #00001000b - bit 3
-                       135
-                       136     setLeft:
-007A 752701            137     mov MOVE_STATE, #00000001b ; MOVE_STATE_LEFT
-007D 22                138     ret
-                       139
-                       140     moveLeft:
-007E C3                141     clr C
-007F E520              142     mov A, Buffer1X
-0081 03                143     RR A
-0082 F520              144     mov Buffer1X, A
-0084 22                145     ret
-                       146
-                       147     setRight:
-0085 752702            148     mov MOVE_STATE, #00000010b ; MOVE_STATE_RIGHT
-0088 22                149     ret
-                       150
-                       151     moveRight:
-0089 C3                152     clr C
-008A E520              153     mov A, Buffer1X
-008C 23                154     RL A
-008D F520              155     mov Buffer1X, A
-008F 22                156     ret
-                       157
-                       158     setUp:
-0090 752704            159     mov MOVE_STATE, #00000100b ; MOVE_STATE_UP
-0093 22                160     ret
-                       161
-                       162     moveUp:
-0094 C3                163     clr C
-0095 E521              164     mov A, Buffer1Y
-0097 03                165     RR A
-0098 F521              166     mov Buffer1Y, A
-009A 22                167     ret
-                       168
-                       169     setDown:
-009B 752708            170     mov MOVE_STATE, #00001000b ; MOVE_STATE_DOWN
-009E 22                171     ret
-                       172
-                       173     moveDown:
-009F C3                174     clr C
-00A0 E521              175     mov A, Buffer1Y
-00A2 23                176     RL A
-00A3 F521              177     mov Buffer1Y, A
-00A5 22                178     ret
-                       179
-                       180
-                       181     ; ------------------------- MAIN ---------------------------------
-                       182     main:
-                       183     matrixCheckRight:
-00A6 75A00F            184     mov P2, #00001111b
-00A9 20A113            185     jb P2.1, matrixCheckUp ; P2.1 is 0 if button "4" or "6" is pressed
-00AC 75A0F0            186     mov P2, #11110000b
-00AF 20A605            187     jb P2.6, matrixCheckLeft ; P2.6 is 0 if button "6" is pressed
-00B2 1185              188     call setRight
-00B4 0200D5            189     ljmp callMove
-                       190
-                       191     matrixCheckLeft:
-00B7 20A416            192     jb P2.4, matrixCheckDown ; P2.4 is 0 if button "4" is pressed
-00BA 117A              193     call setLeft
-00BC 0200D5            194     ljmp callMove
+                       128     ; Update snake with pos from buffer 2
+0055 852380            129     mov P0, Buffer2Y
+0058 852290            130     mov P1, Buffer2X
+                       131
+                       132     ;;;;;;;;;;;;;;;;;;;;;; End loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       133     ; Do a jump
+005B E7                134     mov A, @R1
+005C 70CE              135     jnz SnakeFollowLoop
+                       136
+                       137     endUpdateSnake:
+                       138     ; Move HEAD to Buffer1, so that move operations still work
+005E 852820            139     mov Buffer1X, HeadX
+0061 852921            140     mov Buffer1Y, HeadY
+0064 22                141     ret
+                       142
+                       143
+                       144
+                       145     ;;;; Move Lookup table
+                       146     ; Register 20h
+                       147     ; Left  - #00000001b - bit 0
+                       148     ; Right - #00000010b - bit 1
+                       149     ; Up    - #00000100b - bit 2
+                       150     ; Down  - #00001000b - bit 3
+                       151
+                       152     setLeft:
+0065 752701            153     mov MOVE_STATE, #00000001b ; MOVE_STATE_LEFT
+0068 22                154     ret
+                       155
+                       156     moveLeft:
+0069 C3                157     clr C
+006A E520              158     mov A, Buffer1X
+006C 03                159     RR A
+006D F520              160     mov Buffer1X, A
+006F 22                161     ret
+                       162
+                       163     setRight:
+0070 752702            164     mov MOVE_STATE, #00000010b ; MOVE_STATE_RIGHT
+0073 22                165     ret
+                       166
+                       167     moveRight:
+0074 C3                168     clr C
+0075 E520              169     mov A, Buffer1X
+0077 23                170     RL A
+0078 F520              171     mov Buffer1X, A
+007A 22                172     ret
+                       173
+                       174     setUp:
+007B 752704            175     mov MOVE_STATE, #00000100b ; MOVE_STATE_UP
+007E 22                176     ret
+                       177
+                       178     moveUp:
+007F C3                179     clr C
+0080 E521              180     mov A, Buffer1Y
+0082 03                181     RR A
+0083 F521              182     mov Buffer1Y, A
+0085 22                183     ret
+                       184
+                       185     setDown:
+0086 752708            186     mov MOVE_STATE, #00001000b ; MOVE_STATE_DOWN
+0089 22                187     ret
+                       188
+                       189     moveDown:
+008A C3                190     clr C
+008B E521              191     mov A, Buffer1Y
+008D 23                192     RL A
+008E F521              193     mov Buffer1Y, A
+0090 22                194     ret
                        195
-                       196     matrixCheckUp:
-00BF 75A0F0            197     mov P2, #11110000b
-00C2 20A510            198     jb P2.5, callMove ; P2.5 is 0 if button "2" or "8" is pressed
-00C5 75A00F            199     mov P2, #00001111b
-00C8 20A005            200     jb P2.0, matrixCheckDown ; P2.0 is 0 if button "2" is pressed
-00CB 1190              201     call setUp
-00CD 0200D5            202     ljmp callMove
-                       203
-                       204     matrixCheckDown:
-00D0 20A202            205     jb P2.2, callMove ; P2.2 is 0 if button "8" is pressed
-00D3 119B              206     call setDown
-                       207     ; no ljmp callMove needed
-                       208
-                       209
-                       210
-                       211     callMove:
-                       212     checkLeft:
-00D5 303805            213     jnb MOVE_STATE_LEFT, checkRight
-00D8 117E              214     call moveLeft
-00DA 0200F2            215     ljmp todo
-                       216
-                       217     checkRight:
-00DD 303905            218     jnb MOVE_STATE_RIGHT, checkUp
-00E0 1189              219     call moveRight
-00E2 0200F2            220     ljmp todo
-                       221
-                       222     checkUp:
-00E5 303A05            223     jnb MOVE_STATE_UP, checkDown
-00E8 1194              224     call moveUp
-00EA 0200F2            225     ljmp todo
+                       196
+                       197     ; ------------------------- MAIN ---------------------------------
+                       198     main:
+                       199     matrixCheckRight:
+0091 75A00F            200     mov P2, #00001111b
+0094 20A113            201     jb P2.1, matrixCheckUp ; P2.1 is 0 if button "4" or "6" is pressed
+0097 75A0F0            202     mov P2, #11110000b
+009A 20A605            203     jb P2.6, matrixCheckLeft ; P2.6 is 0 if button "6" is pressed
+009D 1170              204     call setRight
+009F 0200C0            205     ljmp callMove
+                       206
+                       207     matrixCheckLeft:
+00A2 20A416            208     jb P2.4, matrixCheckDown ; P2.4 is 0 if button "4" is pressed
+00A5 1165              209     call setLeft
+00A7 0200C0            210     ljmp callMove
+                       211
+                       212     matrixCheckUp:
+00AA 75A0F0            213     mov P2, #11110000b
+00AD 20A510            214     jb P2.5, callMove ; P2.5 is 0 if button "2" or "8" is pressed
+00B0 75A00F            215     mov P2, #00001111b
+00B3 20A005            216     jb P2.0, matrixCheckDown ; P2.0 is 0 if button "2" is pressed
+00B6 117B              217     call setUp
+00B8 0200C0            218     ljmp callMove
+                       219
+                       220     matrixCheckDown:
+00BB 20A202            221     jb P2.2, callMove ; P2.2 is 0 if button "8" is pressed
+00BE 1186              222     call setDown
+                       223     ; no ljmp callMove needed
+                       224
+                       225
                        226
-                       227     checkDown:
-00ED 303B02            228     jnb MOVE_STATE_DOWN, todo
-00F0 119F              229     call moveDown
-                       230
-                       231     todo:
-00F2 1137              232     call updateSnake
-00F4 1130              233     call updateMatrixLed
-                       234
-00F6 0200A6            235     ljmp main
-                       236
+                       227     callMove:
+                       228     checkLeft:
+00C0 303805            229     jnb MOVE_STATE_LEFT, checkRight
+00C3 1169              230     call moveLeft
+00C5 0200DD            231     ljmp todo
+                       232
+                       233     checkRight:
+00C8 303905            234     jnb MOVE_STATE_RIGHT, checkUp
+00CB 1174              235     call moveRight
+00CD 0200DD            236     ljmp todo
                        237
+                       238     checkUp:
+00D0 303A05            239     jnb MOVE_STATE_UP, checkDown
+00D3 117F              240     call moveUp
+00D5 0200DD            241     ljmp todo
+                       242
+                       243     checkDown:
+00D8 303B02            244     jnb MOVE_STATE_DOWN, todo
+00DB 118A              245     call moveDown
+                       246
+                       247     todo:
+00DD 1124              248     call updateSnake
+                       249     ; call updateMatrixLed
+                       250
+00DF 020091            251     ljmp main
+                       252
+                       253
 ****WARNING:Missing`END'directive
 ASSEMBLY COMPLETE, NO ERRORS FOUND, 1 WARNING
 
 
 ERROR SUMMARY:
-Line 237, WARNING:Missing`END'directive
+Line 253, WARNING:Missing`END'directive
 
 SYMBOL TABLE:
 ??MCU_8051_IDE . . . . . . . . . . .  N  NUMB  8051H  NOT USED
@@ -264,7 +280,7 @@ BUFFER1X . . . . . . . . . . . . . .  N  NUMB  0020H
 BUFFER1Y . . . . . . . . . . . . . .  N  NUMB  0021H
 BUFFER2X . . . . . . . . . . . . . .  N  NUMB  0022H
 BUFFER2Y . . . . . . . . . . . . . .  N  NUMB  0023H
-CALLMOVE . . . . . . . . . . . . . .  C  ADDR  00D5H
+CALLMOVE . . . . . . . . . . . . . .  C  ADDR  00C0H
 CCAP0H . . . . . . . . . . . . . . .  D  ADDR  00FAH  NOT USED
 CCAP0L . . . . . . . . . . . . . . .  D  ADDR  00EAH  NOT USED
 CCAP1H . . . . . . . . . . . . . . .  D  ADDR  00FBH  NOT USED
@@ -291,10 +307,10 @@ CCF4 . . . . . . . . . . . . . . . .  B  ADDR  00DCH  NOT USED
 CCON . . . . . . . . . . . . . . . .  D  ADDR  00D8H  NOT USED
 CFINT. . . . . . . . . . . . . . . .  C  ADDR  0033H  NOT USED
 CH . . . . . . . . . . . . . . . . .  D  ADDR  00F9H  NOT USED
-CHECKDOWN. . . . . . . . . . . . . .  C  ADDR  00EDH
-CHECKLEFT. . . . . . . . . . . . . .  C  ADDR  00D5H  NOT USED
-CHECKRIGHT . . . . . . . . . . . . .  C  ADDR  00DDH
-CHECKUP. . . . . . . . . . . . . . .  C  ADDR  00E5H
+CHECKDOWN. . . . . . . . . . . . . .  C  ADDR  00D8H
+CHECKLEFT. . . . . . . . . . . . . .  C  ADDR  00C0H  NOT USED
+CHECKRIGHT . . . . . . . . . . . . .  C  ADDR  00C8H
+CHECKUP. . . . . . . . . . . . . . .  C  ADDR  00D0H
 CKCON. . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKCON0 . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
 CKRL . . . . . . . . . . . . . . . .  D  ADDR  0097H  NOT USED
@@ -315,7 +331,7 @@ DPL. . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 EA . . . . . . . . . . . . . . . . .  B  ADDR  00AFH  NOT USED
 EC . . . . . . . . . . . . . . . . .  B  ADDR  00AEH  NOT USED
 EECON. . . . . . . . . . . . . . . .  D  ADDR  0096H  NOT USED
-ENDUPDATESNAKE . . . . . . . . . . .  C  ADDR  0073H
+ENDUPDATESNAKE . . . . . . . . . . .  C  ADDR  005EH
 ES . . . . . . . . . . . . . . . . .  B  ADDR  00ACH  NOT USED
 ET0. . . . . . . . . . . . . . . . .  B  ADDR  00A9H  NOT USED
 ET1. . . . . . . . . . . . . . . . .  B  ADDR  00ABH  NOT USED
@@ -346,15 +362,15 @@ IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
 KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
 KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
 KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
-MAIN . . . . . . . . . . . . . . . .  C  ADDR  00A6H
-MATRIXCHECKDOWN. . . . . . . . . . .  C  ADDR  00D0H
-MATRIXCHECKLEFT. . . . . . . . . . .  C  ADDR  00B7H
-MATRIXCHECKRIGHT . . . . . . . . . .  C  ADDR  00A6H  NOT USED
-MATRIXCHECKUP. . . . . . . . . . . .  C  ADDR  00BFH
-MOVEDOWN . . . . . . . . . . . . . .  C  ADDR  009FH
-MOVELEFT . . . . . . . . . . . . . .  C  ADDR  007EH
-MOVERIGHT. . . . . . . . . . . . . .  C  ADDR  0089H
-MOVEUP . . . . . . . . . . . . . . .  C  ADDR  0094H
+MAIN . . . . . . . . . . . . . . . .  C  ADDR  0091H
+MATRIXCHECKDOWN. . . . . . . . . . .  C  ADDR  00BBH
+MATRIXCHECKLEFT. . . . . . . . . . .  C  ADDR  00A2H
+MATRIXCHECKRIGHT . . . . . . . . . .  C  ADDR  0091H  NOT USED
+MATRIXCHECKUP. . . . . . . . . . . .  C  ADDR  00AAH
+MOVEDOWN . . . . . . . . . . . . . .  C  ADDR  008AH
+MOVELEFT . . . . . . . . . . . . . .  C  ADDR  0069H
+MOVERIGHT. . . . . . . . . . . . . .  C  ADDR  0074H
+MOVEUP . . . . . . . . . . . . . . .  C  ADDR  007FH
 MOVE_STATE . . . . . . . . . . . . .  N  NUMB  0027H
 MOVE_STATE_DOWN. . . . . . . . . . .  N  NUMB  003BH
 MOVE_STATE_LEFT. . . . . . . . . . .  N  NUMB  0038H
@@ -410,18 +426,18 @@ SADEN_0. . . . . . . . . . . . . . .  D  ADDR  00B9H  NOT USED
 SADEN_1. . . . . . . . . . . . . . .  D  ADDR  00BAH  NOT USED
 SBUF . . . . . . . . . . . . . . . .  D  ADDR  0099H  NOT USED
 SCON . . . . . . . . . . . . . . . .  D  ADDR  0098H  NOT USED
-SETDOWN. . . . . . . . . . . . . . .  C  ADDR  009BH
-SETLEFT. . . . . . . . . . . . . . .  C  ADDR  007AH
-SETRIGHT . . . . . . . . . . . . . .  C  ADDR  0085H
-SETTIMER . . . . . . . . . . . . . .  C  ADDR  0021H
-SETUP. . . . . . . . . . . . . . . .  C  ADDR  0090H
+SETDOWN. . . . . . . . . . . . . . .  C  ADDR  0086H
+SETLEFT. . . . . . . . . . . . . . .  C  ADDR  0065H
+SETRIGHT . . . . . . . . . . . . . .  C  ADDR  0070H
+SETTIMER . . . . . . . . . . . . . .  C  ADDR  0015H
+SETUP. . . . . . . . . . . . . . . .  C  ADDR  007BH
 SINT . . . . . . . . . . . . . . . .  C  ADDR  0023H  NOT USED
 SM0. . . . . . . . . . . . . . . . .  B  ADDR  009FH  NOT USED
 SM1. . . . . . . . . . . . . . . . .  B  ADDR  009EH  NOT USED
 SM2. . . . . . . . . . . . . . . . .  B  ADDR  009DH  NOT USED
-SNAKEFOLLOWLOOP. . . . . . . . . . .  C  ADDR  0045H
-SNAKELEDREPRESENTATIONX. . . . . . .  N  NUMB  0024H
-SNAKELEDREPRESENTATIONY. . . . . . .  N  NUMB  0025H
+SNAKEFOLLOWLOOP. . . . . . . . . . .  C  ADDR  002CH
+SNAKELEDREPRESENTATIONX. . . . . . .  N  NUMB  0024H  NOT USED
+SNAKELEDREPRESENTATIONY. . . . . . .  N  NUMB  0025H  NOT USED
 SP . . . . . . . . . . . . . . . . .  D  ADDR  0081H  NOT USED
 SPCON. . . . . . . . . . . . . . . .  D  ADDR  00C3H  NOT USED
 SPCR . . . . . . . . . . . . . . . .  D  ADDR  00D5H  NOT USED
@@ -429,7 +445,7 @@ SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
 SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
 SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
-STARTTIMER . . . . . . . . . . . . .  C  ADDR  002DH
+STARTTIMER . . . . . . . . . . . . .  C  ADDR  0021H
 T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
 T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
 T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
@@ -451,13 +467,12 @@ TL0. . . . . . . . . . . . . . . . .  D  ADDR  008AH
 TL1. . . . . . . . . . . . . . . . .  D  ADDR  008BH  NOT USED
 TL2. . . . . . . . . . . . . . . . .  D  ADDR  00CCH  NOT USED
 TMOD . . . . . . . . . . . . . . . .  D  ADDR  0089H
-TODO . . . . . . . . . . . . . . . .  C  ADDR  00F2H
+TODO . . . . . . . . . . . . . . . .  C  ADDR  00DDH
 TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH
 TR1. . . . . . . . . . . . . . . . .  B  ADDR  008EH  NOT USED
 TR2. . . . . . . . . . . . . . . . .  B  ADDR  00CAH  NOT USED
 TXD. . . . . . . . . . . . . . . . .  B  ADDR  00B1H  NOT USED
-UPDATEMATRIXLED. . . . . . . . . . .  C  ADDR  0030H
-UPDATESNAKE. . . . . . . . . . . . .  C  ADDR  0037H
+UPDATESNAKE. . . . . . . . . . . . .  C  ADDR  0024H
 WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED

@@ -6,11 +6,13 @@ Buffer1Y EQU 21h; Row
 Buffer2X EQU 22h; Col
 Buffer2Y EQU 23h; Row
 
-; Lenght 3
+; Lenght 4
 mov 2Ah ,#08h
 mov 2Bh, #08h
 mov 2Ch, #10h
 mov 2Dh, #08h
+mov 2Eh, #08h
+mov 2Fh, #02h
 
 ; Starting point
 HeadX EQU 28h; Keep in sync with incrementor initial value (!!!)
@@ -53,10 +55,10 @@ setb TR0
 ret
 
 ; Light up Matrix
-updateMatrixLed:
-mov P0, SnakeLedRepresentationY
-mov P1, SnakeLedRepresentationX
-ret
+;updateMatrixLed:
+;mov P0, SnakeLedRepresentationY
+;mov P1, SnakeLedRepresentationX
+;ret
 
 
 
@@ -67,12 +69,15 @@ lcall setTimer
 ; starting from 28h
 
 ; Reset LED Representation
-mov SnakeLedRepresentationX, #00h
-mov SnakeLedRepresentationY, #00h
+;mov SnakeLedRepresentationX, #00h
+;mov SnakeLedRepresentationY, #00h
 
 mov R1, #28h
 
-; TODO: WHILE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;; Snake Follow Loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 SnakeFollowLoop:
 ; R1 is our incrementor
 ; Given Buffer1 filled
@@ -82,22 +87,30 @@ mov Buffer2X, @R1
 inc R1
 mov Buffer2Y, @R1
 
+;;;;;;;;;;;;;;;;;;;;; Buffer1 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Move Buffer1 to Head (Update first element with Buffer1)
 mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
-orl SnakeLedRepresentationX, A
+; orl SnakeLedRepresentationX, A
 dec R1
 mov @R1, Buffer1X
 
 mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
-orl SnakeLedRepresentationY, A
+; orl SnakeLedRepresentationY, A
 inc R1
 mov @R1, Buffer1Y
 inc R1
 
+; Update snake with pos from buffer 1
+mov P0, Buffer1Y
+mov P1, Buffer1X
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; Break? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Check if next element is 0
 mov A, @R1
 jz endUpdateSnake
 
+;;;;;;;;;;;;;;;;;;;;; Buffer2 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Store second element in Buffer1
 mov Buffer1X, @R1
 inc R1
@@ -107,13 +120,18 @@ mov Buffer1Y, @R1
 dec R1
 mov @R1, Buffer2X
 mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
-orl SnakeLedRepresentationX, A 
+; orl SnakeLedRepresentationX, A 
 inc R1
 mov @R1, Buffer2Y
 inc R1
 mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
-orl SnakeLedRepresentationY, A 
+; orl SnakeLedRepresentationY, A 
 
+; Update snake with pos from buffer 2
+mov P0, Buffer2Y
+mov P1, Buffer2X
+
+;;;;;;;;;;;;;;;;;;;;;; End loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Do a jump
 mov A, @R1
 jnz SnakeFollowLoop
@@ -230,7 +248,7 @@ call moveDown
 
 todo:
 call updateSnake
-call updateMatrixLed
+; call updateMatrixLed
 
 ljmp main
 
