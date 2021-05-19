@@ -6,13 +6,11 @@ Buffer1Y EQU 21h; Row
 Buffer2X EQU 22h; Col
 Buffer2Y EQU 23h; Row
 
-; Lenght 4
+; Lenght 3
 mov 2Ah ,#08h
 mov 2Bh, #08h
-mov 2Ch, #10h
-mov 2Dh, #08h
-mov 2Eh, #08h
-mov 2Fh, #02h
+mov 2Ch, #08h
+mov 2Dh, #10h
 
 ; Starting point
 HeadX EQU 28h; Keep in sync with incrementor initial value (!!!)
@@ -44,8 +42,8 @@ ljmp main
 setTimer:
 mov TMOD, #01h ; Timer0, 16bit
 clr TF0
-mov TL0, #0EBh; Timer low
-mov TH0, #0FFh; Timer high
+mov TL0, #000h; Timer low
+mov TH0, #0F0h; Timer high
 ; setb ET0
 ; setb EA
 ret
@@ -63,8 +61,6 @@ ret
 
 
 updateSnake:
-jnb TF0, endUpdateSnake
-lcall setTimer
 ; Storage
 ; starting from 28h
 
@@ -89,12 +85,12 @@ mov Buffer2Y, @R1
 
 ;;;;;;;;;;;;;;;;;;;;; Buffer1 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Move Buffer1 to Head (Update first element with Buffer1)
-mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
+; mov A, Buffer1X ; OR: Buffer1X, SnakeLedRepresentationX -> Save in SnakeLedRepresentationX
 ; orl SnakeLedRepresentationX, A
 dec R1
 mov @R1, Buffer1X
 
-mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+; mov A, Buffer1Y ; OR: Buffer1Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
 ; orl SnakeLedRepresentationY, A
 inc R1
 mov @R1, Buffer1Y
@@ -108,7 +104,7 @@ mov P1, Buffer1X
 ;;;;;;;;;;;;;;;;;;;;;;;;;; Break? ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Check if next element is 0
 mov A, @R1
-jz endUpdateSnake
+jz endUpdateSnakeFromBreak
 
 ;;;;;;;;;;;;;;;;;;;;; Buffer2 X/Y ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Store second element in Buffer1
@@ -119,12 +115,12 @@ mov Buffer1Y, @R1
 ; Move buffer2 to second element
 dec R1
 mov @R1, Buffer2X
-mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
+; mov A, Buffer2X ; OR: Buffer2X, SnakeLedRepresentationX -> save in SnakeLedRepresentationX
 ; orl SnakeLedRepresentationX, A 
 inc R1
 mov @R1, Buffer2Y
 inc R1
-mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
+; mov A, Buffer2Y ; OR: Buffer2Y, SnakeLedRepresentationY -> save in SnakeLedRepresentationY
 ; orl SnakeLedRepresentationY, A 
 
 ; Update snake with pos from buffer 2
@@ -132,16 +128,43 @@ mov P0, Buffer2Y
 mov P1, Buffer2X
 
 ;;;;;;;;;;;;;;;;;;;;;; End loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Do a jump
+; Start with loop again
 mov A, @R1
 jnz SnakeFollowLoop
 
-endUpdateSnake:
+endUpdateSnakeFromEndOfLoop:
+; Check if timer is triggered
+jnb TF0, returnFromSnake
+lcall setTimer ; Reset timer
+
+; Lengthen snake using buffer 1
+mov @R1, buffer1X
+inc R1
+mov @R1, buffer1Y
+
+mov P0, Buffer1Y
+mov P1, Buffer1X
+
+lcall returnFromSnake
+
+endUpdateSnakeFromBreak:
+; Check if timer is triggered
+jnb TF0, returnFromSnake
+lcall setTimer ; Reset timer
+
+; Lengthen snake using buffer 2
+mov @R1, buffer2X
+inc R1
+mov @R1, buffer2Y
+
+mov P0, Buffer2Y
+mov P1, Buffer2X
+
+returnFromSnake:
 ; Move HEAD to Buffer1, so that move operations still work
 mov Buffer1X, HeadX
 mov Buffer1Y, HeadY
 ret
-
 
 
 ;;;; Move Lookup table
