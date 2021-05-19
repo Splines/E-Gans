@@ -1,5 +1,7 @@
 CSEG AT 0h
 
+COMPARE EQU Buffer1X
+
 ; Snake Calculation
 Buffer1X EQU 20h; Col
 Buffer1Y EQU 21h; Row
@@ -7,16 +9,16 @@ Buffer2X EQU 22h; Col
 Buffer2Y EQU 23h; Row
 
 ; Lenght 3
-mov 2Ah ,#08h
-mov 2Bh, #08h
-mov 2Ch, #08h
-mov 2Dh, #10h
+mov 2Ah ,#08h; 3
+mov 2Bh, #20h; F
+mov 2Ch, #08h; 3
+mov 2Dh, #40h; G
 
 ; Starting point
 HeadX EQU 28h; Keep in sync with incrementor initial value (!!!)
 HeadY EQU 29h
-setb HeadX.3
-setb HeadY.4
+setb HeadX.3; 3
+setb HeadY.4; E
 mov Buffer1X, HeadX
 mov Buffer1Y, HeadY
 
@@ -43,7 +45,7 @@ setTimer:
 mov TMOD, #01h ; Timer0, 16bit
 clr TF0
 mov TL0, #000h; Timer low
-mov TH0, #0F0h; Timer high
+mov TH0, #0FFh; Timer high
 ; setb ET0
 ; setb EA
 ret
@@ -61,16 +63,38 @@ ret
 
 
 updateSnake:
-; Storage
-; starting from 28h
+;;;;;;;;;;;;;;;; Check for game over ;;;;;;;;;;;;;;;;;;;;;;;;;
+mov R1, #2Ah
 
-; Reset LED Representation
-;mov SnakeLedRepresentationX, #00h
-;mov SnakeLedRepresentationY, #00h
+gameOverCheckLoop:
+isXEqual:
+mov A, @R1
+jz SnakeLengthener ; check if we are at the end of the snake limbs
+inc R1
+inc R1
+cjne A, Buffer1X, gameOverCheckLoop
+;subb A, Buffer1X
 
+; jnz gameOverCheckLoop
+; Buffer1X/Y is our current head
+; Go through every limb (pair x/y)
+; Check for every item: is x the same --> is y the same --> game over
+isYEqual:
+dec R1
+mov A, @R1
+inc R1
+cjne A, Buffer1Y, gameOverCheckLoop
+;mov A, @R1
+;subb A, Buffer1Y
+
+; jnz gameOverCheckLoop
+
+lcall gameOver
+
+
+SnakeLengthener:
+; Storage: starting from 28h
 mov R1, #28h
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;; Snake Follow Loop ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -275,3 +299,11 @@ call updateSnake
 
 ljmp main
 
+
+gameOver:
+mov P0, #0FFh
+mov P1, #0FFh
+mov P0, #00h
+mov P1, #00h
+nop
+jmp gameOver
