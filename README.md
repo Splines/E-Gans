@@ -4,4 +4,4 @@
   <p align="center">An advanced Assembler game for the 8051</p>
 </p>
 
-<img alt="E-Gans Gif" src="./media/egans.gif">
+<img align="center" alt="E-Gans Gif" src="./media/egans.gif">
