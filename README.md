@@ -3,3 +3,5 @@
   <h3 align="center">E-Gans</h3>
   <p align="center">An advanced Assembler game for the 8051</p>
 </p>
+
+<img alt="E-Gans Gif" src="./media/egans.gif">
